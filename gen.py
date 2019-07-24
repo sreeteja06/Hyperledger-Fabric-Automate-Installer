@@ -267,6 +267,7 @@ def ordererDockerFile(hostname, rank, network, arch):
     rslt += jumptab(1, 2) + "ports:"
     rslt += list_value(str((7 + rank)) + "050:7050")
     rslt += jumptab(1, 2) + "volumes:"
+    rslt += list_value("../chaincode:/etc/hyperledger/chaincode")
     rslt += list_value("./channel-artifacts:/etc/hyperledger/configtx")
     rslt += list_value("./crypto-config/ordererOrganizations/" + hostname + "/orderers/" + "orderer." + hostname +  "/msp:/etc/hyperledger/msp/orderer/msp")
     rslt += jumptab(1, 2) + "depends_on:"
@@ -309,6 +310,8 @@ def peerDockerFile(hostname, rank, network, arch, idd, name):
     rslt += list_value("CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp")
     rslt += list_value("CORE_LEDGER_STATE_STATEDATABASE=CouchDB")
     rslt += list_value("CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb" + str(rank) + ":5984")
+    rslt += list_value("CORE_PEER_GOSSIP_BOOTSTRAP=peer" + str(idd) + "." + hostname + ":7051")
+    rslt += list_value("CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0." + hostname + ":7051")
     rslt += jumptab(1, 2) + "ports:"
     rslt += list_value(str((7 + rank)) + "051:7051")
     rslt += list_value(str((7 + rank)) + "053:7053")
