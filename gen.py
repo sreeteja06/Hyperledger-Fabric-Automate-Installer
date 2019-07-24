@@ -49,9 +49,30 @@ def createOrganisations(name, opt, host):
     if (opt == 1):
         rslt = rslt + jumptab(2, 3) + "ID: " + name + "MSP"
         rslt = rslt + jumptab(2, 3) + "MSPDir: crypto-config/peerOrganizations/" + name + "." + host + ".com/msp"
+        rslt = rslt + jumptab(2, 3) + "Policies:"
+        rslt = rslt + jumptab(1, 4) + "Readers:"
+        rslt = rslt + jumptab(1, 5) + "Type: Signature"
+        rslt = rslt + jumptab(1, 5) + "Rule: \"OR('"+ name +"MSP.admin', '"+ name +"MSP.peer', '"+ name +"MSP.client', '"+ name +"MSP.member')\""
+        rslt = rslt + jumptab(1, 4) + "Writers:"
+        rslt = rslt + jumptab(1, 5) + "Type: Signature"
+        rslt = rslt + jumptab(1, 5) + "Rule: \"OR('"+ name +"MSP.admin', '"+ name +"MSP.client', '"+ name +"MSP.member')\""
+        rslt = rslt + jumptab(1, 4) + "Admins:"
+        rslt = rslt + jumptab(1, 5) + "Type: Signature"
+        rslt = rslt + jumptab(1, 5) + "Rule: \"OR('"+ name +"MSP.admin', '"+ name +"MSP.member')\""
     else:
         rslt = rslt + jumptab(2, 3) + "ID: OrdererMSP"
         rslt = rslt + jumptab(2, 3) + "MSPDir: crypto-config/ordererOrganizations/" + host + ".com/msp"
+        rslt = rslt + jumptab(2, 3) + "Policies:"
+        rslt = rslt + jumptab(1, 4) + "Readers:"
+        rslt = rslt + jumptab(1, 5) + "Type: Signature"
+        rslt = rslt + jumptab(1, 5) + "Rule: \"OR('OrdererMSP.member')\""
+        rslt = rslt + jumptab(1, 4) + "Writers:"
+        rslt = rslt + jumptab(1, 5) + "Type: Signature"
+        rslt = rslt + jumptab(1, 5) + "Rule: \"OR('OrdererMSP.member')\""
+        rslt = rslt + jumptab(1, 4) + "Admins:"
+        rslt = rslt + jumptab(1, 5) + "Type: Signature"
+        rslt = rslt + jumptab(1, 5) + "Rule: \"OR('OrdererMSP.admin')\""
+
     rslt = rslt + jumptab(2, 3) + "AdminPrincipal: Role.MEMBER"
     if (opt == 1):
         rslt = rslt + jumptab(2, 3) + "AnchorPeers:"
@@ -77,6 +98,19 @@ def createOrderer(typeorderer, messageCount, absoluteMaxBytes, preferredMaxBytes
     rslt += jumptab(1, 3) + "- kafka2:9092" 
     rslt += jumptab(1, 3) + "- kafka3:9092"
     rslt += jumptab(2, 1) + "Organizations:"
+    rslt = rslt + jumptab(2, 1) + "Policies:"
+    rslt = rslt + jumptab(1, 2) + "Readers:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"ANY Readers\""
+    rslt = rslt + jumptab(1, 2) + "Writers:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"ANY Writers\""
+    rslt = rslt + jumptab(1, 2) + "Admins:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"MAJORITY Admins\""
+    rslt = rslt + jumptab(1, 2) + "BlockValidation:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"ANY Writers\""
     return (rslt)
 
 #Part of configtx.yaml
@@ -119,6 +153,16 @@ def createConfigtx(tabName):
     buffer += createOrderer("kafka", "10", "98 MB", "512 KB", tabName[0])
     buffer += jumptab(2, 0) + "Application: &ApplicationDefaults"
     buffer += jumptab(2, 1) + "Organizations:"
+    buffer = buffer + jumptab(2, 1) + "Policies:"
+    buffer = buffer + jumptab(1, 2) + "Readers:"
+    buffer = buffer + jumptab(1, 3) + "Type: ImplicitMeta"
+    buffer = buffer + jumptab(1, 3) + "Rule: \"ANY Readers\""
+    buffer = buffer + jumptab(1, 2) + "Writers:"
+    buffer = buffer + jumptab(1, 3) + "Type: ImplicitMeta"
+    buffer = buffer + jumptab(1, 3) + "Rule: \"ANY Writers\""
+    buffer = buffer + jumptab(1, 2) + "Admins:"
+    buffer = buffer + jumptab(1, 3) + "Type: ImplicitMeta"
+    buffer = buffer + jumptab(1, 3) + "Rule: \"MAJORITY Admins\""
     buffer += jumptab(2, 0) + "Profiles:"
     buffer += jumptab(2, 0) + createProfiles(tabName, "ProfileTest", "OrdererOrg")
     buffer += jumptab(2, 0) + createChannelProfile(tabName, "ChannelTest")
@@ -372,7 +416,7 @@ def createConst():
 def createJoinChannel(tab, channelId):
     index = 3
     orgNB = int((len(tab) - 2) / 2)
-    rslt = "function join_channel() {\ndocker exec peer0." + tab[2] + "." + tab[0] + ".com peer channel create -o orderer." + tab[0] + ".com:7050 -c " + channelId + " -f /etc/hyperledger/configtx/channel.tx"
+    rslt = "function join_channel() {\ndocker exec -e \"CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@" + tab[2] + "." + tab[0] + ".com/msp\" peer0." + tab[2] + "." + tab[0] + ".com peer channel create -o orderer." + tab[0] + ".com:7050 -c " + channelId + " -f /etc/hyperledger/configtx/channel.tx"
     rslt += jumptab(1, 0) + "docker exec peer0." + tab[2] + "." + tab[0] + ".com cp " + channelId + ".block /etc/hyperledger/configtx"
     for i in range (0, orgNB):
         for k in range (0, int(tab[index])):
