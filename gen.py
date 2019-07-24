@@ -16,6 +16,7 @@ def jumptab(number, number1):
 #Part of configtx.yaml
 def createChannelProfile(orgName, profileName):
     rslt = jumptab(0, 1) + profileName + ":"
+    rslt += jumptab(1, 2) + "<<: *ChannelDefaults"
     rslt += jumptab(1, 2) + "Consortium: ComposerConsortium"
     rslt += jumptab(1, 2) + "Application:"
     rslt += jumptab(1, 3) + "<<: *ApplicationDefaults"
@@ -111,6 +112,8 @@ def createOrderer(typeorderer, messageCount, absoluteMaxBytes, preferredMaxBytes
     rslt = rslt + jumptab(1, 2) + "BlockValidation:"
     rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
     rslt = rslt + jumptab(1, 3) + "Rule: \"ANY Writers\""
+    rslt = rslt + jumptab(2, 1) + "Capabilities:"
+    rslt = rslt + jumptab(1, 2) + "<<: *OrdererCapabilities"
     return (rslt)
 
 #Part of configtx.yaml
@@ -146,13 +149,46 @@ def ordererOrgConfig(host):
     rslt += jumptab(1, 3) + "- Hostname: orderer"
     return (rslt)
 
+#Part of configtx.yaml
+def createCapabilities():
+    rslt =  jumptab(2,0) +"Capabilities:"
+    rslt += jumptab(1,1) + "Channel: &ChannelCapabilities"
+    rslt += jumptab(1,2) + "V1_3: true"
+    rslt += jumptab(1,1) + "Orderer: &OrdererCapabilities"
+    rslt += jumptab(1,2) + "V1_1: true"
+    rslt += jumptab(1,1) + "Application: &ApplicationCapabilities"
+    rslt += jumptab(1,2) + "V1_3: true"
+    rslt += jumptab(1,2) + "V1_2: false"
+    rslt += jumptab(1,2) + "V1_1: false"
+    return (rslt)
+
+def createChannelDefaults():
+    rslt =  jumptab(2,0) +"Channel: &ChannelDefaults"
+    rslt = rslt + jumptab(1, 1) + "Policies:"
+    rslt = rslt + jumptab(1, 2) + "Readers:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"ANY Readers\""
+    rslt = rslt + jumptab(1, 2) + "Writers:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"ANY Writers\""
+    rslt = rslt + jumptab(1, 2) + "Admins:"
+    rslt = rslt + jumptab(1, 3) + "Type: ImplicitMeta"
+    rslt = rslt + jumptab(1, 3) + "Rule: \"MAJORITY Admins\""
+    rslt = rslt + jumptab(1, 1) + "Capabilities:"
+    rslt = rslt + jumptab(1, 2) + "<<: *ChannelCapabilities"
+    return (rslt)
+
 #Call functions in order to create configtx.yaml
 def createConfigtx(tabName):
     buffer = "Organizations:"
     buffer += setOrg(tabName)
+    buffer += createCapabilities()
     buffer += createOrderer("kafka", "10", "98 MB", "512 KB", tabName[0])
+    buffer += createChannelDefaults()
     buffer += jumptab(2, 0) + "Application: &ApplicationDefaults"
-    buffer += jumptab(2, 1) + "Organizations:"
+    buffer += jumptab(1, 1) + "Organizations:"
+    buffer += jumptab(1, 1) + "Capabilities:"
+    buffer += jumptab(1, 2) + "<<: *ApplicationCapabilities"
     buffer = buffer + jumptab(2, 1) + "Policies:"
     buffer = buffer + jumptab(1, 2) + "Readers:"
     buffer = buffer + jumptab(1, 3) + "Type: ImplicitMeta"
@@ -344,7 +380,7 @@ def peerDockerFile(hostname, rank, network, arch, idd, name):
     rslt += working_dir("/opt/gopath/src/github.com/hyperledger/fabric")
     rslt += command("peer node start")
     rslt += jumptab(1, 2) + "environment:"
-    rslt += list_value("CORE_LOGGING_LEVEL=debug")
+    rslt += list_value("FABRIC_LOGGING_SPEC=debug")
     rslt += list_value("CORE_CHAINCODE_LOGGING_LEVEL=DEBUG")
     rslt += list_value("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock")
     rslt += list_value("CORE_PEER_ID=peer" + str(idd) + "." + hostname)
