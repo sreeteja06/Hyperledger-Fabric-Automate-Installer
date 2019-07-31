@@ -247,7 +247,7 @@ def sameName(tab, name):
 
 #Docker-compose.yaml header
 def headerDockerFile(network):
-    rslt = "version: '2'"
+    rslt = "version: '3.4'"
     rslt += jumptab(2,0) + "networks:"
     rslt += jumptab(1, 1) + network + ":"
     rslt += jumptab(2, 0) + "services:"
@@ -294,9 +294,11 @@ def list_value(value):
 def zookeeperDockerFile(network, rank):
     rslt = jumptab(2, 1) + "zookeeper" + str(rank) + ":"
     rslt += container_name("zookeeper" + str(rank))
-    rslt += jumptab(1, 2) + "extends:"
-    rslt += jumptab(1, 4) + "file: docker-compose-base.yml"
-    rslt += jumptab(1, 4) + "service: zookeeper"
+    rslt += jumptab(1, 2) + "image: hyperledger/fabric-zookeeper"
+    rslt += jumptab(1, 2) + "ports:"
+    rslt += list_value('2181')
+    rslt += list_value('2888')
+    rslt += list_value('3888')
     rslt += jumptab(1, 2) + "environment:"
     rslt += list_value("ZOO_MY_ID=" + str((rank + 1)))
     rslt += list_value("ZOO_SERVERS=server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888")
@@ -308,10 +310,14 @@ def zookeeperDockerFile(network, rank):
 def kafkaDockerFile(network, rank):
     rslt = jumptab(2, 1) + "kafka" + str(rank) + ":"
     rslt += container_name("kafka" + str(rank))
-    rslt += jumptab(1, 2) + "extends:"
-    rslt += jumptab(1, 4) + "file: docker-compose-base.yml"
-    rslt += jumptab(1, 4) + "service: kafka"
+    rslt += jumptab(1, 2) + "image: hyperledger/fabric-kafka"
+    rslt += jumptab(1, 2) + "ports:"
+    rslt += list_value('2181')    
     rslt += jumptab(1, 2) + "environment:"
+    rslt += list_value("KAFKA_LOG_RETENTION_MS=-1")
+    rslt += list_value("KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false")
+    rslt += list_value("KAFKA_DEFAULT_REPLICATION_FACTOR=3")
+    rslt += list_value("KAFKA_MIN_INSYNC_REPLICAS=2")
     rslt += list_value("KAFKA_BROKER_ID=" + str(rank))
     rslt += list_value("KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181")
     rslt += list_value("KAFKA_MESSAGE_MAX_BYTES=103809024")
