@@ -353,7 +353,6 @@ def ordererDockerFile(hostname, rank, network, arch):
     rslt += jumptab(1, 2) + "ports:"
     rslt += list_value(str((7 + rank)) + "050:7050")
     rslt += jumptab(1, 2) + "volumes:"
-    rslt += list_value("../chaincode:/etc/hyperledger/chaincode")
     rslt += list_value("./channel-artifacts:/etc/hyperledger/configtx")
     rslt += list_value("./crypto-config/ordererOrganizations/" + hostname + "/orderers/" + "orderer." + hostname +  "/msp:/etc/hyperledger/msp/orderer/msp")
     rslt += jumptab(1, 2) + "depends_on:"
@@ -401,7 +400,8 @@ def peerDockerFile(hostname, rank, network, arch, idd, name):
     rslt += jumptab(1, 2) + "ports:"
     rslt += list_value(str((7 + rank)) + "051:7051")
     rslt += list_value(str((7 + rank)) + "053:7053")
-    rslt += jumptab(1, 2) + "volumes:"
+    rslt += jumptab(1, 2) + "volumes:
+    rslt += list_value("../chaincode:/etc/hyperledger/chaincode")
     rslt += list_value("/var/run/:/host/var/run/")
     rslt += list_value("./channel-artifacts:/etc/hyperledger/configtx")
     rslt += list_value("./crypto-config/peerOrganizations/" + hostname + "/peers/peer" + str(idd) + "." + hostname + "/msp:/etc/hyperledger/peer/msp")
